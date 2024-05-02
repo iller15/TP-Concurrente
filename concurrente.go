@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 type Punto struct {
-	kWh   float64 
-	costo float64 
+	kWh   float64
+	costo float64
 }
 
 func calcularRegresionLineal(puntos []Punto) (m, b float64) {
@@ -15,10 +16,9 @@ func calcularRegresionLineal(puntos []Punto) (m, b float64) {
 	n := float64(len(puntos))
 
 	var wg sync.WaitGroup
-	var mu sync.Mutex 
-	
-	wg.Add(4)
+	var mu sync.Mutex
 
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -31,7 +31,6 @@ func calcularRegresionLineal(puntos []Punto) (m, b float64) {
 		mu.Unlock()
 	}()
 
-	
 	go func() {
 		defer wg.Done()
 		subSumY := 0.0
@@ -43,7 +42,6 @@ func calcularRegresionLineal(puntos []Punto) (m, b float64) {
 		mu.Unlock()
 	}()
 
-	
 	go func() {
 		defer wg.Done()
 		subSumXY := 0.0
@@ -55,7 +53,6 @@ func calcularRegresionLineal(puntos []Punto) (m, b float64) {
 		mu.Unlock()
 	}()
 
-	
 	go func() {
 		defer wg.Done()
 		subSumXX := 0.0
@@ -67,7 +64,7 @@ func calcularRegresionLineal(puntos []Punto) (m, b float64) {
 		mu.Unlock()
 	}()
 
-	wg.Wait() 
+	wg.Wait()
 
 	promX := sumX / n
 	promY := sumY / n
@@ -92,7 +89,16 @@ func main() {
 	m, b := calcularRegresionLineal(historial)
 	fmt.Printf("Modelo de predicción: Costo = %.2fkWh + %.2f\n", m, b)
 
-	consumoEstimado := 350.0
-	costoEstimado := predecirCosto(consumoEstimado, m, b)
-	fmt.Printf("El costo estimado para un consumo de %.2f kWh es de $ %.2f\n", consumoEstimado, costoEstimado)
+	start := time.Now()
+
+	for j := 0; j < 1000; j++ {
+		for i := 0; i < 1000000; i++ {
+			consumoEstimado := float64(350 + i)
+			predecirCosto(consumoEstimado, m, b)
+		}
+		
+	}
+
+	duration := time.Since(start)
+	fmt.Printf("Tiempo de ejecución: %s\n", duration)
 }
